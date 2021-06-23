@@ -1,19 +1,20 @@
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet, Text, View, Image, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, Image, ScrollView, Dimensions, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
 import BasketballImage from "./assets/products/basketball1.jpeg";
 import Avatar from "./assets/icons/avatar.png";
 import {API_URL} from './config/constants';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import relativeTime from "dayjs/plugin/relativeTime";
-import "dayjs/locale/ko"
-
+import "dayjs/locale/ko";
+import Carousel from 'react-native-snap-carousel';
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
 
 export default function App() {
-  const [products, setProducts] = React.useState([])
+  const [products, setProducts] = React.useState([]);
+  const [banners, setBanners] = React.useState([]);
   React.useEffect(()=>{
     axios
     .get(`${API_URL}/products`)
@@ -22,16 +23,44 @@ export default function App() {
     }).catch((error)=>{
       console.error(error);
     });
+    axios
+    .get(`${API_URL}/banners`)
+    .then((result)=>{
+      setBanners(result.data.banners);
+    })
+    .catch((error)=>{
+      console.error(error);
+    })
   },[]);
   return (
+    <SafeAreaView style={styles.safeAreaView}>
     <View style={styles.container}>
       <ScrollView>
+        <Carousel
+          data={banners}
+          sliderWidth={Dimensions.get("window").width}
+          itemWidth={Dimensions.get("window").width}
+          itemHeight={200}
+          renderItem={(obj)=>{
+            return(
+              <TouchableOpacity onPress={()=>{
+                Alert.alert('배너 클릭');
+              }}>
+                <Image style={styles.bannerImage} 
+                source={{uri : `${API_URL}/${obj.item.imageUrl}`}}
+                resizeMode="contain"
+                />
+              </TouchableOpacity>
+            )
+          }}
+        />
       <Text style={styles.Headline}>판매되는 상품들</Text>
       <View style={styles.productList}>
       {
         products.map((product, index) => {
           return (
-            <View style={styles.productCard}>
+            <View style={styles.productCard} key={index} >
+              {product.soldout === 1 && <View style={styles.productBlur}/>}
             <View>
               <Image 
               style={styles.productImage} 
@@ -60,6 +89,7 @@ export default function App() {
     </View>
     </ScrollView>
     </View>
+    </SafeAreaView>
   );
 }
 
@@ -70,7 +100,6 @@ const styles = StyleSheet.create({
     alignItems:'center',
     justifyContent:'center',
     backgroundColor:'#fff',
-    paddingTop:32,
   },
   productCard:{
     width:300,
@@ -122,5 +151,22 @@ const styles = StyleSheet.create({
     fontSize:24,
     fontWeight:"800",
     marginBottom:24
+  },
+  productBlur:{
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    left: 0,
+    backgroundColor:"#ffffffaa",
+    zIndex: 999,
+  },
+  bannerImage:{
+    width: "100%",
+    height: 200,
+  },
+  safeAreaView:{
+    flex:1,
+    backgroundColor:"#ffff",
   }
   });
