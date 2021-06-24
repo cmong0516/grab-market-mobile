@@ -71,7 +71,9 @@ export default function MainScreen(props) {
             return (
               <TouchableOpacity
                 onPress={() => {
-                  props.navigation.navigate("Product");
+                  props.navigation.navigate("Product",{
+                    id: product.id,
+                  });
                 }}
               >
                 <View style={styles.productCard} key={index}>
